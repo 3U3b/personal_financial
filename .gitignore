@@ -1,0 +1,10 @@
+.env
+*.env
+.env.*
+*.env.*
+.env.local
+.env.*.local
+*.pem
+*.key
+*.me
+__pycache__

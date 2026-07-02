@@ -1,180 +1,90 @@
-import requests
-import datetime
-import json
-import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from engine import (
+    get_market,
+    get_stock,
+    get_fundamentals,
+    get_news,
+    get_etf
+)
 
-# ======================
-# CONFIG
-# ======================
-STOCK = "2330"
-ETF = "0050"
-FUND_ID = "B12028"
-STATE_FILE = "state.json"
+from config import STOCKS
 
-NOISE = ["代子公司", "澄清", "取得理財", "更正"]
 
-GMAIL = os.environ.get("GMAIL_USER")
-PASS = os.environ.get("GMAIL_APP_PASSWORD")
-TO = os.environ.get("RECEIVER_EMAIL")
+def render_stock(stock_id):
+    s = get_stock(stock_id)
+    f = get_fundamentals(stock_id)
 
-# ======================
-# STATE
-# ======================
-def load_state():
-    if os.path.exists(STATE_FILE):
-        return json.load(open(STATE_FILE))
-    return []
-
-def save_state(data):
-    json.dump(data[-300:], open(STATE_FILE, "w"))
-
-# ======================
-# STOCK + MA20 (TWSE ONLY)
-# ======================
-def stock_block():
-    url = f"https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_{STOCK}.tw"
-    r = requests.get(url).json()
-
-    try:
-        data = r["msgArray"][0]
-        price = float(data.get("z", data.get("a", "0")).split("_")[0])
-        name = data.get("n", "stock")
-
-        # fake MA20 via TWSE history proxy (simple fallback)
-        ma20 = price * 0.99
-
-        status = "🟢 above MA20" if price >= ma20 else "🔴 below MA20"
-
-        return f"""
-        <h2>📈 Stock {name}</h2>
-        <p>Price: {price}</p>
-        <p>MA20: {ma20:.2f}</p>
-        <p>Status: {status}</p>
-        """
-    except:
-        return "<p>stock error</p>"
-
-# ======================
-# FUND (CNYES STABLE API)
-# ======================
-def fund_block():
-    url = f"https://ws.api.cnyes.com/ws/api/v1/fund/detail"
-    r = requests.get(url, params={"fundId": FUND_ID}).json()
-
-    d = r.get("data", {})
-    if not d:
-        return "<p>fund error</p>"
+    if not s:
+        return f"<h2>{stock_id} - no data</h2>"
 
     return f"""
-    <h2>💰 Fund</h2>
-    <p>{d.get('fundName')}</p>
-    <p>NAV: {d.get('nav')}</p>
-    <p>Date: {d.get('navDate')}</p>
+    <h2>📈 {s['name']} ({stock_id})</h2>
+    <ul>
+        <li>收盤價: {s['close']}</li>
+        <li>漲跌: {s['change']}</li>
+        <li>成交量: {s['volume']}</li>
+        <li>PE: {f['pe'] if f else '-'}</li>
+        <li>殖利率: {f['yield'] if f else '-'}</li>
+    </ul>
     """
 
-# ======================
-# ETF (TWSE fallback safe)
-# ======================
-def etf_block():
-    try:
-        url = f"https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_{ETF}.tw"
-        r = requests.get(url).json()
-        d = r["msgArray"][0]
-        price = float(d["z"])
 
-        return f"""
-        <h2>📦 ETF {ETF}</h2>
-        <p>{price}</p>
-        """
-    except:
-        return "<p>ETF error</p>"
-
-# ======================
-# INSTITUTIONAL (DELAYED OK)
-# ======================
-def institutional_block():
-    url = "https://openapi.twse.com.tw/v1/fund/T86"
-    r = requests.get(url).json()
-
-    item = next((x for x in r if x["stockNo"] == STOCK), None)
-    if not item:
-        return "<p>institutional no data</p>"
+def render_market():
+    m = get_market()
 
     return f"""
-    <h2>🏦 Institutional</h2>
-    <p>Foreign: {item.get('foreignBuySell')}</p>
-    <p>Dealer: {item.get('dealerBuySell')}</p>
+    <h2>📊 整體大盤</h2>
+    <ul>
+        <li>指數: {m['index']}</li>
+        <li>漲跌: {m['change']}</li>
+        <li>幅度: {m['pct']}</li>
+        <li>日期: {m['date']}</li>
+    </ul>
     """
 
-# ======================
-# NEWS + ANTI-NOISE ENGINE
-# ======================
-def news_block():
-    url = "https://openapi.twse.com.tw/v1/opendata/t187ap46_L"
-    r = requests.get(url).json()
 
-    seen = load_state()
-    new_state = list(seen)
+def render_news():
+    news = get_news()
 
-    out = "<h2>📢 News</h2><ul>"
-    count = 0
+    html = "<h2>📢 News</h2><ul>"
 
-    for i in r:
-        uid = i.get("code") + i.get("date") + i.get("time")
+    if not news:
+        html += "<li>no new events</li>"
+    else:
+        for n in news:
+            html += f"<li>[{n['company']}] {n['title']}</li>"
 
-        if uid in seen:
-            continue
+    html += "</ul>"
+    return html
 
-        title = i.get("title", "")
 
-        if any(n in title for n in NOISE):
-            continue
+def render_etf():
+    e = get_etf()
 
-        new_state.append(uid)
-        out += f"<li>{title}</li>"
-        count += 1
+    if not e:
+        return "<h2>ETF error</h2>"
 
-        if count >= 5:
-            break
+    return f"""
+    <h2>📦 ETF 0050</h2>
+    <ul>
+        <li>價格: {e['price']}</li>
+        <li>成交量: {e['volume']}</li>
+    </ul>
+    """
 
-    save_state(new_state)
 
-    out += "</ul>"
-    return out
-
-# ======================
-# EMAIL
-# ======================
-def send(html):
-    msg = MIMEMultipart()
-    msg["From"] = GMAIL
-    msg["To"] = TO
-    msg["Subject"] = f"Financial Engine v1 - {datetime.date.today()}"
-
-    msg.attach(MIMEText(html, "html"))
-
-    s = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-    s.login(GMAIL, PASS)
-    s.send_message(msg)
-    s.quit()
-
-# ======================
-# MAIN
-# ======================
 def main():
     html = "<h1>📈 Financial Engine v1</h1>"
 
-    html += stock_block()
-    html += fund_block()
-    html += etf_block()
-    html += institutional_block()
-    html += news_block()
+    html += render_market()
+
+    for s in STOCKS:
+        html += render_stock(s)
+
+    html += render_etf()
+    html += render_news()
 
     print(html)
-    send(html)
+
 
 if __name__ == "__main__":
     main()
