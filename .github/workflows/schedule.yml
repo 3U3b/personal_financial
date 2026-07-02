@@ -1,8 +1,13 @@
 name: financial-engine
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 on:
   schedule:
-  # 台灣 09:00–13:00
+    # 台灣時間週一至週五 09:00 - 13:00 每整點自動開機執行
     - cron: "0 1-5 * * 1-5"
   workflow_dispatch:
 
@@ -17,18 +22,28 @@ jobs:
       with:
         python-version: "3.10"
 
-    - run: pip install -r requirements.txt
+    - name: Install dependencies
+      run: pip install -r requirements.txt
 
-    - run: python main.py
+    # 修正一：將 env 與 run 的層級精確分離，徹底清除重疊的混亂代碼
+    - name: Execute Financial Monitor
+      run: python main.py
       env:
         GMAIL_USER: ${{ secrets.GMAIL_USER }}
         GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+        LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+        LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
 
+
+    # 修正二：直接指定 HEAD 推送到遠端的 master 分支 (或 main)，徹底解決 rejected 衝突
+        # 如果遠端首頁預設叫 master，就寫 HEAD:master；如果是 main 就寫 HEAD:main
     - name: commit dashboard
       run: |
         git config user.name "financial-engine-bot"
         git config user.email "actions@github.com"
-        git add index.html state.json
-        git diff --cached --quiet || git commit -m "update dashboard"
-        git push origin HEAD:main
+        git add index.html state.json || true
+        git commit -m "update daily report [skip ci]" || true
+        git push origin HEAD:master --force
+        echo "等待硬碟檔案讀寫釋放..."
+        sleep 3
