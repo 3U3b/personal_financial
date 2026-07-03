@@ -1,4 +1,7 @@
 import json
+import os
+import sys
+import datetime
 import requests
 from data_engine import BASE, HEADERS, WATCHLIST, load_state, save_state
 
@@ -86,3 +89,59 @@ def get_monthly_revenue():
     except:
         pass
     return revenue_signals
+
+
+
+# -------------------
+# 2026 官方標準：LINE Messaging API 主動推播模組 (Push Message)，對齊官方 cURL 規格
+# -------------------
+def send_line_messaging_api(flow_data):
+    channel_access_token = os.environ.get("LINE_TOKEN")
+    user_id = os.environ.get("LINE_USER_ID")
+    
+    if not channel_access_token or not user_id:
+        print("⚠️ 提示：未偵測到 LINE_TOKEN 或 LINE_USER_ID，跳過 LINE 官方帳號發信步驟。")
+        return
+
+    # 🟢 訊息一：大盤動態力道 (獨立框)
+    msg_market = f"📊【大盤資金流向監報】\n"
+    msg_market += f"🔥 多空失衡比：{flow_data.get('imbalance_ratio', '0%')}\n"
+    msg_market += f"🎯 量化動態指標：{flow_data.get('signal', '暫無訊號')}"
+
+    # 🟢 訊息二：即時動作指引 (獨立框)
+    msg_action = f"🚨【Fin-Engine 動能突破提示】\n"
+    msg_action += f"持股價量差分追蹤、最新中文重大訊息與每月營收爆發雷達已全部編譯完成！\n"
+    msg_action += f"👉 請即刻查收專屬網頁看板！"
+
+    # 2026 官方正統規格：精確對齊 api.line.me 的 JSON 請求矩陣
+    url = "https://api.line.me/v2/bot/message/push"
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {channel_access_token}"
+    }
+    
+    # 依據官方文件範例：將兩個訊息物件同時塞進 messages 清單中，手機會收到兩封分開的漂亮對話框！
+    payload = {
+        "to": user_id,
+        "messages": [
+            {
+                "type": "text",
+                "text": msg_market
+            },
+            {
+                "type": "text",
+                "text": msg_action
+            }
+        ]
+    }
+
+    try:
+        print("正在發送 2026 Messaging API 企業級推播...")
+        res = requests.post(url, headers=headers, json=payload, timeout=10)
+        if res.status_code == 200:
+            print("🎉 【抵達終點】LINE 官方帳號機器人已成功將日報推送到你的手機！")
+        else:
+            print(f"❌ LINE 發送失敗，錯誤回應：{res.text}")
+    except Exception as e:
+        print(f"❌ LINE API 連線發生異常: {e}")
