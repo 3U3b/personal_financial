@@ -115,38 +115,6 @@ def get_stock(code):
 # -------------------
 # 🧩 LAYER 4 — QUANT SIGNAL ENGINE (市場多空買賣壓)
 # -------------------
-def get_pressure_signal():
-    try:
-        r = requests.get(f"{BASE}/exchangeReport/MI_5MINS", headers=HEADERS, timeout=10).json()
-        if isinstance(r, list) and len(r) > 0:
-            first_row = r[0]
-            bid = int(first_row.get("AccBidVolume", 0))
-            ask = int(first_row.get("AccAskVolume", 0))
-            
-            # 💡 工程校正：導入極值分母防護 (max 防 0)，計算出標準化多空 Imbalance 比例
-            imbalance_ratio = (bid - ask) / max(bid + ask, 1)
-            
-            # 定義量化訊號強度
-            signal_strength = (
-                "🚀 強烈買盤拉抬" if imbalance_ratio > 0.15 
-                else "📈 買盤略大於賣盤" if imbalance_ratio > 0.02 
-                else "📉 賣壓湧現" if imbalance_ratio < -0.05 
-                else "⚪ 買賣力道均衡"
-            )
-            
-            return {
-                "status": "成功",
-                "bid": bid,
-                "ask": ask,
-                "pressure": bid - ask,
-                "imbalance_ratio": f"{round(imbalance_ratio * 100, 2)}%",
-                "signal": signal_strength
-            }
-    except:
-        pass
-    return {"status": "失敗", "bid": 0, "ask": 0, "pressure": 0, "imbalance_ratio": "0%", "signal": "無訊號"}
-
-
 def get_etf():
     all_data = _preload_market_data()
     rows = [x for x in all_data if x.get("Code") == ETF_CODE]
@@ -177,13 +145,33 @@ def get_market():
 # FLOW (BUY/SELL PRESSURE)
 # -------------------
 def get_flow():
-    r = requests.get(BASE + "/exchangeReport/MI_5MINS", headers=HEADERS).json()[0]
+    try:
+        r = requests.get(f"{BASE}/exchangeReport/MI_5MINS", headers=HEADERS, timeout=10).json()
+        if isinstance(r, list) and len(r) > 0:
+            first_row = r[0]
+            bid = int(first_row.get("AccBidVolume", 0))
+            ask = int(first_row.get("AccAskVolume", 0))
+            
+            # 💡 工程校正：導入極值分母防護 (max 防 0)，計算出標準化多空 Imbalance 比例
+            imbalance_ratio = (bid - ask) / max(bid + ask, 1)
+            
+            # 定義量化訊號強度
+            signal_strength = (
+                "🚀 強烈買盤拉抬" if imbalance_ratio > 0.15 
+                else "📈 買盤略大於賣盤" if imbalance_ratio > 0.02 
+                else "📉 賣壓湧現" if imbalance_ratio < -0.05 
+                else "⚪ 買賣力道均衡"
+            )
+            
+            return {
+                "status": "成功",
+                "bid": bid,
+                "ask": ask,
+                "pressure": bid - ask,
+                "imbalance_ratio": f"{round(imbalance_ratio * 100, 2)}%",
+                "signal": signal_strength
+            }
+    except:
+        pass
+    return {"status": "失敗", "bid": 0, "ask": 0, "pressure": 0, "imbalance_ratio": "0%", "signal": "無訊號"}
 
-    bid = int(r.get("AccBidVolume", 0))
-    ask = int(r.get("AccAskVolume", 0))
-
-    return {
-        "bid": bid,
-        "ask": ask,
-        "pressure": bid - ask
-    }
