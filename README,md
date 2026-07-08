@@ -1,0 +1,26 @@
+# Financial Engine
+
+Automated Taiwan stock market dashboard.
+
+Features:
+- TWSE API integration
+- GitHub Actions scheduler
+- GitHub Pages deployment
+- LINE notification
+- Email reporting
+- Incremental state tracking
+
+#### 雖然只是個自學的CI/CD repo，但可這不是鬧著玩的(?
+
+## 內有
++ 大盤指數(?
++ 固定3支股票(2330、2317、2454)的 收盤、成交量、漲跌
++ 當日大盤資金買賣 doughnut 圖
++ 固定3支股票的公開消息
+
+### 暫停研究原因
++ 不知道怎麼運用 API 的資料
++ 專有名詞好難 什麼是哪個?
++ 沒有持股多到需要追資訊
++ 修改陽春介面想到就頭痛
++ 重點其實不是開發財務資訊系統

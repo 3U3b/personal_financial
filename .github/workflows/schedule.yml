@@ -1,31 +1,32 @@
-name: financial-engine
+name: financial-bot
+on:
+  schedule:
+  # 台灣時間週一至週五 09:00 - 13:00 每整點自動開機執行
+    - cron: "0 1-5 * * 1-5"
+    # - cron: "30 7 * * 1-5"
+  workflow_dispatch:
 
 permissions:
   contents: write
   pages: write
   id-token: write
 
-on:
-  schedule:
-    # 台灣時間週一至週五 09:00 - 13:00 每整點自動開機執行
-    - cron: "0 1-5 * * 1-5"
-  workflow_dispatch:
-
 jobs:
-  run:
+  generate-report:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - uses: actions/setup-python@v5
+    - name: Setup Python
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
+        cache: pip
 
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    # 修正一：將 env 與 run 的層級精確分離，徹底清除重疊的混亂代碼
     - name: Execute Financial Monitor
       run: python main.py
       env:
@@ -35,15 +36,30 @@ jobs:
         LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
         LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
 
-
-    # 修正二：直接指定 HEAD 推送到遠端的 master 分支 (或 main)，徹底解決 rejected 衝突
-        # 如果遠端首頁預設叫 master，就寫 HEAD:master；如果是 main 就寫 HEAD:main
-    - name: commit dashboard
+    - name: Commit state
       run: |
-        git config user.name "financial-engine-bot"
-        git config user.email "actions@github.com"
-        git add index.html state.json || true
-        git commit -m "update daily report [skip ci]" || true
-        git push origin HEAD:master --force
-        echo "等待硬碟檔案讀寫釋放..."
-        sleep 3
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add stock_state.json news_state.json index.html
+        git diff --cached --quiet || git commit -m "Update state"
+        git push
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: .
+
+  deploy-pages:
+    needs: generate-report
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
+      

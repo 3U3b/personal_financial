@@ -7,4 +7,13 @@
 *.pem
 *.key
 *.me
-__pycache__
+
+# ignore python cache
+__pycache__/
+
+# ignore other generated json
+*.json
+
+# but keep application state
+!stock_state.json
+!news_state.json
