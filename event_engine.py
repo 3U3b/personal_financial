@@ -11,6 +11,15 @@ from storage import load_news_state, save_news_state
 
 BLACKLIST = ["代子公司", "更正", "公告說明", "異動", "聘任", "改選", "澄清媒體"]
 
+def safe_float(v):
+    try:
+        return float(str(v).replace(",", ""))
+    except:
+        return 0
+        
+# -------------------
+# -------------------
+
 def get_news(WATCHLIST_SET):
     """
     上市公司每日重大訊息 (OpenAPI 規格校正版)
@@ -30,29 +39,25 @@ def get_news(WATCHLIST_SET):
     for x in r:
         # 規格校正：精確對齊官方手冊中文鍵名
         code = x.get("公司代號", "").strip()
-
         # 過濾持股清單
         if code not in WATCHLIST_SET:
             continue
-
-        # 規格校正：精確對齊發言日期與時間
-        uid = f"{code}_{x.get('發言日期')}_{x.get('發言時間')}"
-
-        if uid in state:
-            continue
-
+            
         # 規格校正：API 手冊上寫著 "主旨 "，後方確實帶有一個半形空格！(傻眼)
-        title = x.get("主旨 ", "").strip()
-
+        title = x.get("主旨 ", "").strip() + ("..." if len(x.get("主旨 ", "").strip()) > 9  else "")
         if any(b in title for b in BLACKLIST):
             continue
 
+        # 規格校正：精確對齊發言日期與時間
+        uid = f"{code}_{x.get('發言日期')}_{x.get('發言時間')}_{title}"
+        if uid in state:
+            continue
+
+        new_state.add(uid)
         result.append({
             "company": x.get("公司名稱", "未知公司").strip(),
             "text": title
         })
-
-        new_state.add(uid)
 
     save_news_state(new_state)
     return result[:5]
@@ -85,11 +90,11 @@ def get_monthly_revenue(WATCHLIST_SET):
             if code in WATCHLIST_SET:
                 found.append(code)
                 
-            yoy = float(
+            yoy = safe_float(
                 x.get("營業收入-去年同月增減(%)", 0)
             )
 
-            mom = float(
+            mom = safe_float(
                 x.get("營業收入-上月比較增減(%)", 0)
             )
             if abs(yoy) < 0.01:
@@ -99,7 +104,7 @@ def get_monthly_revenue(WATCHLIST_SET):
                 
             # 判定營收爆發訊號 (年增率大於 20% 為成長股特徵)
             if yoy > 50 and mom > 10:
-                status = "breakout"
+                status = "revenue_surge"
                 signal = "營收爆發"
             elif yoy > 20:
                 if mom > 0:
@@ -144,6 +149,7 @@ def get_monthly_revenue(WATCHLIST_SET):
 def send_line_messaging_api(flow_data):
     channel_access_token = os.environ.get("LINE_TOKEN")
     user_id = os.environ.get("LINE_USER_ID")
+    web_url = os.environ.get("WEB_URL")
     
     if not channel_access_token or not user_id:
         print(" 提示：未偵測到 LINE_TOKEN 或 LINE_USER_ID，跳過 LINE 官方帳號發信步驟。")
@@ -152,12 +158,12 @@ def send_line_messaging_api(flow_data):
     # 訊息一：大盤動態力道 (獨立框)
     msg_market = f"【大盤資金流向監報】\n"
     msg_market += f" 多空失衡比：{flow_data.get('imbalance_ratio', '0%')}\n"
-    msg_market += f" 量化動態指標：{flow_data.get('market_sentiment', '暫無訊號')}"
+    msg_market += f" 量化動態指標：{flow_data.get('market_sentiment', '暫無訊號')}\n"
+    msg_market += f" 請即刻查收專屬網頁看板！\n {web_url}"
     
     # 訊息二：即時動作指引 (獨立框)
-    msg_action = f"【Fin-Engine 動能突破提示】\n"
-    msg_action += f"持股價量差分追蹤、最新中文重大訊息與每月營收爆發雷達已全部編譯完成！\n"
-    msg_action += f" 請即刻查收專屬網頁看板！"
+    # msg_action = f"【Fin-Engine 動能突破提示】\n"
+    # msg_action += f"持股價量差分追蹤、最新中文重大訊息與每月營收爆發雷達已全部編譯完成！\n"
 
     # 2026 官方正統規格：精確對齊 api.line.me 的 JSON 請求矩陣
     url = "https://api.line.me/v2/bot/message/push"
@@ -167,17 +173,13 @@ def send_line_messaging_api(flow_data):
         "Authorization": f"Bearer {channel_access_token}"
     }
     
-    # 依據官方文件範例：將兩個訊息物件同時塞進 messages 清單中，手機會收到兩封分開的漂亮對話框！
+    # 依據官方文件範例，可將兩個訊息物件同時塞進 messages 清單中，手機會收到兩封分開的對話框
     payload = {
         "to": user_id,
         "messages": [
             {
                 "type": "text",
                 "text": msg_market
-            },
-            {
-                "type": "text",
-                "text": msg_action
             }
         ]
     }

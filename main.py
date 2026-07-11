@@ -31,15 +31,15 @@ def main():
     html += f"<h2>大盤</h2><ul><li>{m}</li></ul>"
 
     # stocks
-    history = storage.load_stock_state()
+    # history = storage.load_stock_state()
     revenue_map = event_engine.get_monthly_revenue(WATCHLIST_SET)
     for c in WATCHLIST:
-        s = data_engine.get_stock(c, history)
+        s = data_engine.get_stock(c)
 
         if s:
             s["revenue"] = revenue_map.get(c)
             html += render.render_stock(s)
-    storage.save_stock_state(history)
+    # storage.save_stock_state(history)
     
     # ETF
     # 假設這是一個 dict {'price': 108.8, 'volume': 73421155}

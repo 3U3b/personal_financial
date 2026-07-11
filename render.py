@@ -4,9 +4,9 @@ def render_stock(s):
     return f"""
     <h2> {s['name']} ({s['code']})</h2>
     <ul>
-        <li>收盤: {s['close']}</li>
-        <li>成交量: {s['volume']}</li>
-        <li>漲跌: {s['change']}</li>
+        <li>收盤: {s['market_data']['close']}</li>
+        <li>成交量: {s['market_data']['volume']}</li>
+        <li>漲跌: {s['market_data']['change']}</li>
         <li>
             營收狀態：
             {s['signals']['momentum'] or '無資料'}

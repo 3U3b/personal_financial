@@ -6,10 +6,10 @@ try:
 except NameError:
     current_dir = Path.cwd().resolve()
 
-STOCK_STATE_FILE = current_dir / "stock_state.json"
+# STOCK_STATE_FILE = current_dir / "stock_state.json"
 NEWS_STATE_FILE = current_dir / "news_state.json"
 
-
+"""
 def load_stock_state():
     if not STOCK_STATE_FILE.exists():
         return {}
@@ -23,6 +23,7 @@ def load_stock_state():
 def save_stock_state(state_dict):
     with open(STOCK_STATE_FILE, "w", encoding="utf-8") as f:
         json.dump(state_dict, f, ensure_ascii=False, indent=4)
+"""
 
 # --- NEWS (透過檔案紀錄達到增量爬蟲) ---
 def load_news_state():

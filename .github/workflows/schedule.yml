@@ -1,9 +1,9 @@
 name: financial-bot
 on:
   schedule:
-  # 台灣時間週一至週五 09:00 - 13:00 每整點自動開機執行
-    - cron: "0 1-5 * * 1-5"
-    # - cron: "30 7 * * 1-5"
+  # 台灣時間週一至週五 09:00 - 13:00 每小時7分時自動開機執行
+    - cron: "7 9-13 * * 1-5"
+      timezone: "Asia/Taipei"
   workflow_dispatch:
 
 permissions:
@@ -13,10 +13,13 @@ permissions:
 
 jobs:
   generate-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        # GitHub Actions 的「臨時機器人帳密」
 
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -30,11 +33,13 @@ jobs:
     - name: Execute Financial Monitor
       run: python main.py
       env:
-        GMAIL_USER: ${{ secrets.GMAIL_USER }}
-        GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-        RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+        # GMAIL_USER: ${{ secrets.GMAIL_USER }}
+        # GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        # RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
         LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
         LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+        # 來自 Variables
+        WEB_URL: ${{ vars.WEB_URL }}
 
     - name: Commit state
       run: |
