@@ -1,0 +1,153 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <title>Financial Engine v3</title>
+    </head>
+    <body>
+
+    <h1>Financial Engine v3</h1>
+
+    <h2>大盤</h2><ul><li>{'index': '6241.67', 'change': '-', 'date': '1150709'}</li></ul>
+    <h2> 台積電 (2330)</h2>
+    <ul>
+        <li>收盤: 2415.0</li>
+        <li>成交量: 34681018</li>
+        <li>漲跌: -50.0</li>
+        <li>
+            營收狀態：
+            價格動能明顯轉弱
+        </li>
+    </ul>
+    
+    <h2> 鴻海 (2317)</h2>
+    <ul>
+        <li>收盤: 237.5</li>
+        <li>成交量: 40528079</li>
+        <li>漲跌: 0.0</li>
+        <li>
+            營收狀態：
+            價格平穩盤整
+        </li>
+    </ul>
+    
+    <h2> 聯發科 (2454)</h2>
+    <ul>
+        <li>收盤: 3925.0</li>
+        <li>成交量: 7370647</li>
+        <li>漲跌: -70.0</li>
+        <li>
+            營收狀態：
+            價格小幅走弱
+        </li>
+    </ul>
+    
+    <h2>ETF 現況</h2>
+    <ul>
+    <li><b>最新價格：</b>105.8 元</li>
+    <li><b>今日成交量：</b>56650627 股</li>
+    </ul>
+    
+    <h2>當日市場資金流向圖 (Market Flow)</h2>
+    <div style="
+        background:#FFF3E0;
+        border:1px solid #FFE0B2;
+        padding:15px;
+        margin:15px 0;
+        border-radius:5px;
+        width:450px;
+    ">
+        <ul>
+            <li>
+                <b>買壓：</b>
+                <span style="color:#E53935;font-weight:bold;">
+                    78.2%
+                </span>
+            </li>
+            <li>
+                <b>賣壓：</b>
+                <span style="color:#1E88E5;font-weight:bold;">
+                    21.8%
+                </span>
+            </li>
+            <li>
+                <b>淨買賣壓：</b>
+                <span style="font-weight:bold;">
+                +4,600,103 張
+                </span>
+            </li>
+            <li>
+                <b>買賣差：</b>
+                <span style="font-weight:bold;">
+                    4,600,103 張
+                </span>
+                <b>多空失衡：</b>
+                <span style="font-weight:bold;">
+                    56.35%
+                </span>
+            </li>
+            <li>
+                <b>量化動態：</b>
+                <span style="
+                    background:#1E88E543A047;
+                    color:white;
+                    padding:2px 6px;
+                    border-radius:3px;">
+                    🚀 強烈買盤拉抬
+                </span>
+            </li>
+        </ul>
+
+        <div style="width:400px;margin:10px auto;">
+            <canvas id="marketFlowChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+    <script>
+    const ctx = document
+        .getElementById('marketFlowChart')
+        .getContext('2d');
+
+    new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels:[
+                "買壓",
+                "賣壓"
+            ],
+            datasets:[{
+                data:[
+                    78.2,
+                    21.8
+                ],
+                backgroundColor:[
+                    "#E53935",
+                    "#1E88E5"
+                ],
+                borderWidth:2
+            }]
+        },
+
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    position:"bottom"
+                }
+            }
+        }
+    });
+    </script>
+    <h2> News</h2><ul><li>[聯發科] 聯發科技115年6月份自結合併營收淨額公告...</li><li>[聯發科] 代重要子公司Gaintech Co. Limited公告董事會決議發放股利...</li><li>[聯發科] 代重要子公司MediaTek Investment Singapore Pte. Ltd.
+公告董事會決議發放股利...</li><li>[聯發科] 代重要子公司聯發資本股份有限公司公告召集董事會
+(代行臨時股東會)...</li><li>[聯發科] 代重要子公司聯發資本股份有限公司公告董事會
+(代行臨時股東會)重要決議事項...</li></ul>
+    </body>
+    <footer>
+    更新時間：
+    2026-07-11 12:15:35
+    </footer>
+    </html>
+    
