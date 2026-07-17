@@ -9,12 +9,12 @@
 
     <h1>Financial Engine v3</h1>
 
-    <h2>大盤</h2><ul><li>{'index': '6254.59', 'change': '+', 'date': '1150715'}</li></ul>
+    <h2>大盤</h2><ul><li>{'index': '6269.77', 'change': '+', 'date': '1150716'}</li></ul>
     <h2> 台積電 (2330)</h2>
     <ul>
-        <li>收盤: 2440.0</li>
-        <li>成交量: 33665566</li>
-        <li>漲跌: 20.0</li>
+        <li>收盤: 2470.0</li>
+        <li>成交量: 30538604</li>
+        <li>漲跌: 30.0</li>
         <li>
             營收狀態：
             價格小幅走強
@@ -23,8 +23,8 @@
     
     <h2> 鴻海 (2317)</h2>
     <ul>
-        <li>收盤: 239.0</li>
-        <li>成交量: 36108846</li>
+        <li>收盤: 242.5</li>
+        <li>成交量: 39074704</li>
         <li>漲跌: 3.5</li>
         <li>
             營收狀態：
@@ -34,33 +34,117 @@
     
     <h2> 聯發科 (2454)</h2>
     <ul>
-        <li>收盤: 3740.0</li>
-        <li>成交量: 7313796</li>
-        <li>漲跌: 80.0</li>
+        <li>收盤: 3700.0</li>
+        <li>成交量: 6009689</li>
+        <li>漲跌: -40.0</li>
         <li>
             營收狀態：
-            價格動能明顯增強
+            價格小幅走弱
         </li>
     </ul>
     
     <h2>ETF 現況</h2>
     <ul>
-    <li><b>最新價格：</b>106.3 元</li>
-    <li><b>今日成交量：</b>110911495 股</li>
+    <li><b>最新價格：</b>106.4 元</li>
+    <li><b>今日成交量：</b>73088988 股</li>
     </ul>
     
-        <div style="background:#ECEFF1;border:1px solid #CFD8DC;
-        padding:15px;margin:15px 0;border-radius:5px;width:450px;">
-            <h3>當日市場資金流向圖 (Market Flow)</h3>
-            <p style="color:#546E7A;font-weight:bold;">
-            ☕ 目前為非開盤時間或官方數據尚未更新。
-            </p>
+    <h2>當日市場資金流向圖 (Market Flow)</h2>
+    <div style="
+        background:#FFF3E0;
+        border:1px solid #FFE0B2;
+        padding:15px;
+        margin:15px 0;
+        border-radius:5px;
+        width:450px;
+    ">
+        <ul>
+            <li>
+                <b>買壓：</b>
+                <span style="color:#E53935;font-weight:bold;">
+                    71.9%
+                </span>
+            </li>
+            <li>
+                <b>賣壓：</b>
+                <span style="color:#1E88E5;font-weight:bold;">
+                    28.1%
+                </span>
+            </li>
+            <li>
+                <b>淨買賣壓：</b>
+                <span style="font-weight:bold;">
+                +2,975,856 張
+                </span>
+            </li>
+            <li>
+                <b>買賣差：</b>
+                <span style="font-weight:bold;">
+                    2,975,856 張
+                </span>
+                <b>多空失衡：</b>
+                <span style="font-weight:bold;">
+                    43.86%
+                </span>
+            </li>
+            <li>
+                <b>量化動態：</b>
+                <span style="
+                    background:#1E88E543A047;
+                    color:white;
+                    padding:2px 6px;
+                    border-radius:3px;">
+                    🚀 強烈買盤拉抬
+                </span>
+            </li>
+        </ul>
+
+        <div style="width:400px;margin:10px auto;">
+            <canvas id="marketFlowChart"></canvas>
         </div>
-        <h2> News</h2><ul></ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
+    <script>
+    const ctx = document
+        .getElementById('marketFlowChart')
+        .getContext('2d');
+
+    new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels:[
+                "買壓",
+                "賣壓"
+            ],
+            datasets:[{
+                data:[
+                    71.9,
+                    28.1
+                ],
+                backgroundColor:[
+                    "#E53935",
+                    "#1E88E5"
+                ],
+                borderWidth:2
+            }]
+        },
+
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    position:"bottom"
+                }
+            }
+        }
+    });
+    </script>
+    <h2> News</h2><ul><li>[台積電] 台積公司2026年第二季每股盈餘新台幣27.25元...</li></ul>
     </body>
     <footer>
     更新時間：
-    2026-07-16 07:30:25
+    2026-07-17 04:18:30
     </footer>
     </html>
     
